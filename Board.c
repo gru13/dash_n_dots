@@ -1,26 +1,57 @@
 #include "./Inbulit_types.h"
 
 
-int DrawBoard(struct Game G){
-    char Board[HYT][WDT];
-    for(int i = 0;i<WDT;i++){   
-        Board[0][i] = '*';
-        Board[WDT-1][i] = '*';
-    }
-    // for(int i =1 ;i<HYT-1;i++){
-    //     for(int j =0 ;j<WDT;j++){
-    //         if(j == 0  || j == WDT-1){
-    //             Board[i][j] = '*';
-    //         }else{
-    //             Board[i][j] = 32;
-    //         }
-    //     }
-    // }
+void initBoard(struct Board *b){
     for(int i = 0 ;i<HYT;i++){
         for(int j = 0;j<WDT;j++){
-            printf("%c",Board[i][j]);
+            b->Board[i][j] = SPC;
         }
-        printf("\n");
     }
-    return 0;
+    for(int i = 0;i<WDT;i++){   
+        b->Board[0][i] = HOR_LINE;
+        b->Board[HYT-1][i] = HOR_LINE;
+    }
+    for(int i = 0; i < HYT; i++){
+        b->Board[i][0] = VER_LINE;
+        b->Board[i][WDT-1] = VER_LINE;
+    }
+    b->Board[0][0] = TL_COR;
+    b->Board[0][WDT-1] = TR_COR;
+    b->Board[HYT-1][0] = BL_COR;
+    b->Board[HYT-1][WDT-1] = BR_COR;
+}
+
+void printBoard(char Board[HYT][WDT]){
+    char TotalBoard[MAX_LINE];
+    int l = 0;
+    for(int i = 0 ;i<HYT;i++){
+        for(int j = 0;j<WDT;j++){
+            TotalBoard[l] = Board[i][j];
+            l++;
+        }
+        TotalBoard[l] = '\n';
+        l++;
+    }
+    TotalBoard[l] = '\0';
+    // printf("%s",TotalBoard);
+}
+
+
+char keyIsPressed(){
+    if(GetAsyncKeyState(VK_LEFT) & 0x8000){
+        return MV_LFT;
+    }
+    if(GetAsyncKeyState(VK_RIGHT) & 0x8000){
+        return MV_RYT;
+    }
+    if(GetAsyncKeyState(VK_UP) & 0x8000){
+        return MV_UPP;
+    }
+    if(GetAsyncKeyState(VK_DOWN) & 0x8000){
+        return MV_DWN;
+    }
+    if(GetAsyncKeyState(VK_ESCAPE) & 0x8000){
+        return CLOSE;
+    }
+    return CONT;
 }

@@ -1,7 +1,7 @@
 ## This makefile is created using Claude AI
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -lm
+CFLAGS = -Wall -Wextra -lm -lncurses
 
 # Target executables
 TARGETS = Game
