@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "curses.h": "c",
+        "dash_n_dots.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}

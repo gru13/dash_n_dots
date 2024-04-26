@@ -45,8 +45,8 @@ struct Game {
 
 
 // function of Board.c
-void initBoard( );
-void printBoard(char Board[HYT][WDT]);
+void initBoard(WINDOW* win);
+// void printBoard(char Board[HYT][WDT]);
 char keyIsPressed();
 
 // function in main
