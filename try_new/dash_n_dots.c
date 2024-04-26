@@ -9,9 +9,12 @@
 #define HYT 55
 // #define REFRESH_RATE 4000 // this in milli-second
 #define SPC 32	 // ' '
-#define DASH 220 // ▄
-#define BLOK 219 // █
-#define DOT 254	 // ■
+#define DASH 219 // █
+#define BALL 79	 // O
+// #define BALL 254	 // ■
+// #define DOT 254	 // ■
+// #define DASH  220 // ▄
+// #define BLOK 219 // █
 
 #define VER_LINE 186 // ║
 #define HOR_LINE 205 // ═
@@ -27,6 +30,11 @@
 #define MV_DWN 'D'
 #define CONT 'c'
 #define CLOSE 'x'
+
+#define MAX_Y_BALL HYT-3
+#define MIN_Y_BALL 1
+#define MAX_X_BALL WDT - 2
+#define MIN_X_BALL 1
 
 typedef struct game{
 	WINDOW *win;
@@ -62,6 +70,7 @@ int main(){
 
 	initWindow(&G);
 	initDash(&G);
+	initBall(&G);
 	curs_set(0);
 
 	char ctrl = CONT;
@@ -194,5 +203,13 @@ int changeSpeed(Game* G,int ctrl){
 		
 	}
 	Sleep(100);
+	return 0;
+}
+
+int initBall(Game* g){
+	g->ballX = WDT/2;
+	g->ballY = MAX_Y_BALL;
+	sprintf(temp, "%c",BALL);
+	mvwprintw(g->win,g->ballY,g->ballX,temp);
 	return 0;
 }
