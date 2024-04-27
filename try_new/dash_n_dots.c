@@ -5,8 +5,8 @@
 #include <windows.h>
 #include <time.h>
 
-#define WDT 176
-#define HYT 55
+// int g->WDT;// 176
+// int g->HYT;// 55
 // #define REFRESH_RATE 4000 // this in milli-second
 #define SPC 32	 // ' '
 #define DASH 219 // █
@@ -31,26 +31,30 @@
 #define CONT 'c'
 #define CLOSE 'x'
 
-#define MAX_Y_BALL HYT-3
+#define MAX_Y_BALL g->HYT-3
 #define MIN_Y_BALL 1
-#define MAX_X_BALL WDT - 2
+#define MAX_X_BALL g->WDT - 2
 #define MIN_X_BALL 1
 
 typedef struct game{
 	WINDOW *win;
+	int HYT;
+	int WDT;
 	int DashLoc;
 	int DashSize;
 	int ballX;
 	int ballY;
+	int ballDir;
 	byte Speed; 
 } Game;
 
 DWORD SPEEDS[] = {1,5,35,85};
 int nofSdp = sizeof(SPEEDS)/sizeof(DWORD);
-char temp[WDT];
+char temp[20];
 
 
 int keyIsPressed();
+int initGame(Game* g);
 int initWindow(Game *g);
 int changeSpeed(Game* G,int ctrl);
 
@@ -61,18 +65,7 @@ int initBall(Game* g);
 
 int main(){
 	Game G;
-	G.Speed = 0;
-	system("cls");
-	if (!initscr()){
-		printf("Error in creating Screen\n");
-		return 1;
-	}
-
-	initWindow(&G);
-	initDash(&G);
-	initBall(&G);
-	curs_set(0);
-
+	initGame(&G);
 	char ctrl = CONT;
 	while(ctrl != CLOSE){
 		ctrl = keyIsPressed();
@@ -96,29 +89,38 @@ int main(){
 		ctrl == CONT;
 		Sleep(SPEEDS[G.Speed]);
 	}
-
 	endwin();
 	return 0;
 }
 
 
-
-int initWindow(Game *g){
-
-	g->win = newwin(HYT, WDT, 0, 0);
+int initGame(Game* g){
+	system("cls");
+	g->Speed = 0;
+	int maxx,maxy;
+	g->win = initscr();
 	if (g->win == NULL){
-		printf("Error in creating the Window\n");
-		endwin();
+		printf("Error in creating Screen\n");
 		return 1;
 	}
+	g->WDT = getmaxx(g->win);
+	g->HYT = getmaxy(g->win);
+	initWindow(g);
+	initDash(g);
+	initBall(g);
+	curs_set(0);
+	wrefresh(g->win);
+	return 0;
+}
 
-	for(int i = 0;i<HYT;i++){
-		for(int j =0 ; j<WDT;j++){
-			if(i == 0 || i == HYT-1){
+int initWindow(Game *g){
+	for(int i = 0;i<g->HYT;i++){
+		for(int j =0 ; j<g->WDT;j++){
+			if(i == 0 || i == g->HYT-1){
 				sprintf(temp, "%c",HOR_LINE);
 				mvwprintw(g->win,i,j,temp);
 			}
-			else if(j == 0 || j == WDT-1){
+			else if(j == 0 || j == g->WDT-1){
 				sprintf(temp, "%c",VER_LINE);
 				mvwprintw(g->win,i,j,temp);
 			}
@@ -129,11 +131,11 @@ int initWindow(Game *g){
 	sprintf(temp, "%c",TL_COR);
 	mvwprintw(g->win,0,0,temp);
 	sprintf(temp, "%c",TR_COR);
-	mvwprintw(g->win,0,WDT-1,temp);
+	mvwprintw(g->win,0,g->WDT-1,temp);
 	sprintf(temp, "%c",BL_COR);
-	mvwprintw(g->win,HYT-1,0,temp);
+	mvwprintw(g->win,g->HYT-1,0,temp);
 	sprintf(temp, "%c",BR_COR);
-	mvwprintw(g->win,HYT-1,WDT-1,temp);
+	mvwprintw(g->win,g->HYT-1,g->WDT-1,temp);
 
 	wrefresh(g->win);
 
@@ -141,8 +143,8 @@ int initWindow(Game *g){
 
 
 int initDash(Game* g){
-	g->DashSize = 5;
-	g->DashLoc = WDT/2;
+	g->DashSize = 10;
+	g->DashLoc = g->WDT/2;
 	MoveDash(g);
 	wrefresh(g->win);
 	return 0;
@@ -153,17 +155,17 @@ int MoveDash(Game* g){
 		g->DashLoc = 1 + g->DashSize ;
 		return 0;
 	}
-	if(g->DashLoc + g->DashSize >= WDT){
-		g->DashLoc = WDT - 2 - g->DashSize;
+	if(g->DashLoc + g->DashSize >= g->WDT){
+		g->DashLoc = g->WDT - 2 - g->DashSize;
 		return 0;
 	}
-	for(int i = 1;i<WDT-1;i++){
+	for(int i = 1;i<g->WDT-1;i++){
 		sprintf(temp, "%c",SPC);
-		mvwprintw(g->win,HYT-2,i,temp);
+		mvwprintw(g->win,g->HYT-2,i,temp);
 	}
 	for(int i = g->DashLoc-g->DashSize; i<g->DashLoc+g->DashSize;i++){
 		sprintf(temp, "%c",DASH);
-		mvwprintw(g->win,HYT-2,i,temp);
+		mvwprintw(g->win,g->HYT-2,i,temp);
 	}
 	wrefresh(g->win);
 	return 0;
@@ -207,7 +209,7 @@ int changeSpeed(Game* G,int ctrl){
 }
 
 int initBall(Game* g){
-	g->ballX = WDT/2;
+	g->ballX = g->WDT/2;
 	g->ballY = MAX_Y_BALL;
 	sprintf(temp, "%c",BALL);
 	mvwprintw(g->win,g->ballY,g->ballX,temp);
