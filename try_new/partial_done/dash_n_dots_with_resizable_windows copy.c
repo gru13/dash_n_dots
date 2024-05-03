@@ -23,8 +23,6 @@
 #define BR_COR 188	 // ╝
 #define SPC 32		 // ' '
 
-
-
 #define MV_LFT 'L'
 #define MV_RYT 'R'
 #define MV_UPP 'U'
@@ -48,7 +46,7 @@ typedef struct game{
 DWORD SPEEDS[] = {1,5,35,85};
 int nofSdp = sizeof(SPEEDS)/sizeof(DWORD);
 char temp[20];
-char ctrl = CONT;// this will act as a muthex lock like mechanism
+
 
 int keyIsPressed();
 int initGame(Game* g);
@@ -61,16 +59,10 @@ int MoveDash(Game* g);
 int initBall(Game* g);
 int moveBall(Game* g);
 
-void* moveDAshTh(void*arg){
-	Game* g = (Game*)arg;
-	move(10,10);
-	wprintw(g->win,"guruu");
-	return NULL;
-}
-
 int main(){
 	Game G;
 	initGame(&G);
+	char ctrl = CONT;
 	while(ctrl != CLOSE){
 		ctrl = keyIsPressed();
 
@@ -81,19 +73,12 @@ int main(){
 		moveBall(&G);	
 		if(ctrl == CONT){
 			continue;
-		}else if(ctrl == MV_LFT && G.DashLoc - G.DashSize > 1){
-			sprintf(temp, "%c",SPC);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc+G.DashSize,temp);
-			sprintf(temp, "%c",DASH);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc-1-G.DashSize,temp);
-			G.DashLoc -=1;
-			ctrl = CONT;
-		}else if(ctrl == MV_RYT && G.DashLoc + G.DashSize < G.WDT-2){
-			sprintf(temp, "%c",SPC);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc - G.DashSize,temp);
-			sprintf(temp, "%c",DASH);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc+G.DashSize+1,temp);
+		}else if(ctrl == MV_LFT){
+			G.DashLoc -= 1;
+			MoveDash(&G);
+		}else if(ctrl == MV_RYT){
 			G.DashLoc += 1;
+			MoveDash(&G);
 		}else if(ctrl == MV_UPP || ctrl == MV_DWN){
 			changeSpeed(&G,ctrl);
 		}
@@ -101,7 +86,6 @@ int main(){
 		Sleep(SPEEDS[G.Speed]);
 	}
 	endwin();
-	// system("cls");
 	return 0;
 }
 
@@ -127,7 +111,7 @@ int moveBall(Game* g){
 	}
 	sprintf(temp, "%c",BALL);
 	mvwprintw(g->win,g->ballY,g->ballX,temp);
-	// Sleep(50);
+	Sleep(50);
 	return 0;
 }
 
@@ -191,7 +175,6 @@ int initDash(Game* g){
 }
 
 int MoveDash(Game* g){
-
 	if(g->DashLoc - g->DashSize < 1){
 		g->DashLoc = 1 + g->DashSize ;
 		return 0;
@@ -251,7 +234,7 @@ int changeSpeed(Game* G,int ctrl){
 
 int initBall(Game* g){
 	g->ballX = g->WDT/2;
-	g->ballY = g->HYT-3;
+	g->ballY = g->HYT-2;
 	sprintf(temp, "%c",BALL);
 	mvwprintw(g->win,g->ballY,g->ballX,temp);
 	return 0;

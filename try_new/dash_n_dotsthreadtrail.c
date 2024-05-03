@@ -42,18 +42,19 @@ typedef struct game{
 	int ballX;
 	int ballY;
 	int ballDir;
-	byte Speed; 
+	byte dashSpeed; 
+	short ballSpeed; 
 } Game;
 
-DWORD SPEEDS[] = {1,5,35,85};
-int nofSdp = sizeof(SPEEDS)/sizeof(DWORD);
+DWORD dashSPEEDS[] = {1,5,35,85};
+int nofSdp = sizeof(dashSPEEDS)/sizeof(DWORD);
 char temp[20];
 char ctrl = CONT;// this will act as a muthex lock like mechanism
 
 int keyIsPressed();
 int initGame(Game* g);
 int initWindow(Game *g);
-int changeSpeed(Game* G,int ctrl);
+int changedashSpeed(Game* G,int ctrl);
 
 int initDash(Game* g);
 int MoveDash(Game* g);
@@ -63,43 +64,74 @@ int moveBall(Game* g);
 
 void* moveDAshTh(void*arg){
 	Game* g = (Game*)arg;
-	move(10,10);
-	wprintw(g->win,"guruu");
+	ctrl = keyIsPressed();
+	while(ctrl != CLOSE){
+		ctrl = keyIsPressed();
+		// // location checking purpose
+		// sprintf(temp, "%c|%3d|%3d",(char)ctrl,g->DashLoc,dashSPEEDS[g->dashSpeed]);
+		// mvwprintw(g->win,1,1,temp);	
+		if(ctrl == CONT){
+			continue;
+		}else if(ctrl == MV_LFT && g->DashLoc - g->DashSize > 1){
+			sprintf(temp, "%c",SPC);
+			mvwprintw(g->win,g->HYT-2,g->DashLoc+g->DashSize,temp);
+			sprintf(temp, "%c",DASH);
+			mvwprintw(g->win,g->HYT-2,g->DashLoc-1-g->DashSize,temp);
+			g->DashLoc -=1;
+			ctrl = CONT;
+		}else if(ctrl == MV_RYT && g->DashLoc + g->DashSize < g->WDT-2){
+			sprintf(temp, "%c",SPC);
+			mvwprintw(g->win,g->HYT-2,g->DashLoc - g->DashSize,temp);
+			sprintf(temp, "%c",DASH);
+			mvwprintw(g->win,g->HYT-2,g->DashLoc+g->DashSize+1,temp);
+			g->DashLoc += 1;
+		}else if(ctrl == MV_UPP || ctrl == MV_DWN){
+			changedashSpeed(g,ctrl);
+		}
+		ctrl == CONT;
+		Sleep(dashSPEEDS[g->dashSpeed]);
+		wrefresh(g->win);
+	}
+	return NULL;
+}
+
+void* moveBallTh(void* arg){
+	Game* g = (Game*)arg;
+	while(ctrl != CLOSE){
+		mvwprintw(g->win,g->ballY,g->ballX," ");
+		//
+		g->ballX -=  1;
+		g->ballY -=  1;
+		if(g->ballX >= g->WDT-1){
+			g->ballX = g->WDT-2;
+		}
+		if(g->ballX <= 1){
+			g->ballX = 1;
+		}
+		if(g->ballY >= g->HYT-2){
+			g->ballY = g->HYT-3;
+		}
+		if(g->ballY <= 1){
+			g->ballY = 1;
+		}
+		sprintf(temp, "%c",BALL);
+		mvwprintw(g->win,g->ballY,g->ballX,temp);
+		Sleep(g->ballSpeed);
+		wrefresh(g->win);			
+	}
 	return NULL;
 }
 
 int main(){
 	Game G;
 	initGame(&G);
-	while(ctrl != CLOSE){
-		ctrl = keyIsPressed();
-
-		// location checking purpose
-		sprintf(temp, "%c|%3d|%3d",(char)ctrl,G.DashLoc,SPEEDS[G.Speed]);
-		mvwprintw(G.win,1,1,temp);
-		wrefresh(G.win);
-		moveBall(&G);	
-		if(ctrl == CONT){
-			continue;
-		}else if(ctrl == MV_LFT && G.DashLoc - G.DashSize > 1){
-			sprintf(temp, "%c",SPC);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc+G.DashSize,temp);
-			sprintf(temp, "%c",DASH);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc-1-G.DashSize,temp);
-			G.DashLoc -=1;
-			ctrl = CONT;
-		}else if(ctrl == MV_RYT && G.DashLoc + G.DashSize < G.WDT-2){
-			sprintf(temp, "%c",SPC);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc - G.DashSize,temp);
-			sprintf(temp, "%c",DASH);
-			mvwprintw(G.win,G.HYT-2,G.DashLoc+G.DashSize+1,temp);
-			G.DashLoc += 1;
-		}else if(ctrl == MV_UPP || ctrl == MV_DWN){
-			changeSpeed(&G,ctrl);
-		}
-		ctrl == CONT;
-		Sleep(SPEEDS[G.Speed]);
-	}
+	pthread_t dashMover_t,ballMover_t;
+	// pthread_create(&dashMover_t,NULL,moveDAshTh,(void*)&G);
+	pthread_create(&ballMover_t,NULL,moveBallTh,(void*)&G);
+	// initBall(&G);
+	// wrefresh(G.win);
+	// pthread_join(dashMover_t,NULL);
+	pthread_join(ballMover_t,NULL);
 	endwin();
 	// system("cls");
 	return 0;
@@ -111,29 +143,15 @@ int moveBall(Game* g){
 	mvwprintw(g->win,g->ballY,g->ballX,temp);
 	// g->ballX += rand()%3 - 1;
 	// g->ballY += rand()%3 - 1;
-	g->ballX -=  1;
-	g->ballY -=  1;
-	if(g->ballX >= g->WDT-1){
-		g->ballX = g->WDT-2;
-	}
-	if(g->ballX <= 1){
-		g->ballX = 1;
-	}
-	if(g->ballY >= g->HYT-2){
-		g->ballY = g->HYT-3;
-	}
-	if(g->ballY <= 1){
-		g->ballY = 1;
-	}
-	sprintf(temp, "%c",BALL);
-	mvwprintw(g->win,g->ballY,g->ballX,temp);
+	
 	// Sleep(50);
 	return 0;
 }
 
 int initGame(Game* g){
 	system("cls");
-	g->Speed = 0;
+	g->dashSpeed = 0;
+	g->ballSpeed = 150;
 	int maxx,maxy;
 	g->win = initscr();
 	if (g->win == NULL){
@@ -231,17 +249,17 @@ int keyIsPressed(){
 	return CONT;
 }
 
-int changeSpeed(Game* G,int ctrl){
+int changedashSpeed(Game* G,int ctrl){
 	if(ctrl == MV_UPP){
-		G->Speed += 1;
-		if(G->Speed >= nofSdp){
-			G->Speed = nofSdp-1;
+		G->dashSpeed += 1;
+		if(G->dashSpeed >= nofSdp){
+			G->dashSpeed = nofSdp-1;
 		}
 	}
 	if(ctrl == MV_DWN){
-		G->Speed -= 1;
-		if(G->Speed <= 0){
-			G->Speed = 0;
+		G->dashSpeed -= 1;
+		if(G->dashSpeed <= 0){
+			G->dashSpeed = 0;
 		}
 		
 	}
@@ -254,5 +272,6 @@ int initBall(Game* g){
 	g->ballY = g->HYT-3;
 	sprintf(temp, "%c",BALL);
 	mvwprintw(g->win,g->ballY,g->ballX,temp);
+	wrefresh(g->win);
 	return 0;
 }

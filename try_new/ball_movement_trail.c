@@ -2,9 +2,10 @@
 #include<stdio.h>
 
 #define star '0'
-
+#define PI		3.14159265358979323846
 int X = 10;
 int Y = 10;
+char matrix[X][Y];
 
 typedef struct path{
     int x;
@@ -23,44 +24,26 @@ void printMat(char matrix[X][Y]){
 }
 
 double angle(int degree){
-    return degree*M_PI/180;
+    return degree*PI/180;
 }
-int move(char matrix[X][Y], int* direction,int x, int y, PATH*);
 
-int main(){
-    char matrix[X][Y];
-    int Max_X = X-1;
-    int Min_X = 0;
-    int Max_Y = Y-1;
-    int Min_Y = 0;
-    int direction = 45;
-    printf("\n%lf\n",tan(angle(direction)));
+void initBoard(){
     for(int i =0 ;i<X;i++){
         for (int j = 0; j < Y; j++){
             matrix[i][j] = '|';
         }
     }
-    int x = Max_X;
-    int y = Max_Y/2;
-    matrix[x][y] = star;
-    printMat(matrix);
-    int way[200];
-    int len = 0;
-    for(int i = 1;i<=Max_Y-y;i++){
-        printf("%d\t",i);
-        
-        way[len] = Max_X - (int)round((i*tan(angle(direction))));
-        matrix[way[len]][y+i]= star;
-        // printf("(%d - %d)\t",way[len],y+i);
-        len++;
-    } 
+    matrix[X/2][Y-1] = star;
+}
+
+int main(){
+    int direction = 45, baseX = X/2 ,baseY = Y-2;
+    // printf("\n%lf\n",tan(angle(direction)));
+    initBoard();printMat(matrix);
+    
+
     printf("\nguu\n");
     printMat(matrix);
-
+    return 0;
 }
-
-int move(char matrix[X][Y], int* direction, int x,int y, PATH* path){
-    if(direction == 90){
-        
-    }
-}
+way[len] = X-1 - (int)round((i*tan(angle(direction))));
