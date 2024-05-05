@@ -60,6 +60,7 @@ int initWindow(Game *g);
 int moveball(Game* g);
 double angle(int degree);
 int moveInX(Game* g);
+int moveInY(Game* g);
 int nearestPoint(Game* g);
 
 
@@ -196,9 +197,10 @@ double angle(int degree){
 	return round(tan(degree*M_PI/180));
 }
 
-// int nearestPoint(Game* g){
-// 	int x1,x2,y1,y2,
-// 	if(g->ballY <= 0 && g->ballX < g->WDT-1 && g->ballX >= 1){
-
-// 	}
-// }
+int nearestPoint(Game* g){
+	int x1,x2,y1,y2,
+	if(g->ballY <= 0 && g->ballX < g->WDT-1 && g->ballX >= 1){
+		return 1;
+	}
+	return 0;
+}
