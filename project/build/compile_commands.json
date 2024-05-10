@@ -1,0 +1,8 @@
+[
+{
+  "directory": "D:/dash_n_dots/project/build",
+  "command": "C:\\MinGW\\bin\\gcc.exe   -g -o CMakeFiles\\Dash_n_Dots.dir\\main.c.obj -c D:\\dash_n_dots\\project\\main.c",
+  "file": "D:/dash_n_dots/project/main.c",
+  "output": "CMakeFiles/Dash_n_Dots.dir/main.c.obj"
+}
+]

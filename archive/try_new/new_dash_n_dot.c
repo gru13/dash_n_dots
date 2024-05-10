@@ -53,20 +53,21 @@ typedef struct ball{
     Point BaseLoc;
     short Speed;
     int direction;
+    pthread_t thread;
 }Ball;
 
 typedef struct game{
     WINDOW* win;
     int hyt;
     int wdt;
-    Dash dsh;
-    Ball Bal;
+    Dash dash;
+    Ball ball;
 }Game;
 
 DWORD dashSPEEDS[] = {1,5,35,85};
 int nofSdp = sizeof(dashSPEEDS)/sizeof(DWORD);
 char ctrl = CONT;// this will act as a muthex lock like mechanism
-char Finsh = CONT;
+char finsh = CONT;
 
 int keyIsPressed();
 int initGame(Game* g);
@@ -74,7 +75,7 @@ int initWindow(Game *g);
 int changedashSpeed(Game* G,int ctrl);
 
 int initDash(Game* g);
-void* MoveDash(void* arg);
+void* moveDash(void* arg);
 int changedashSpeed(Game* G,int ctrl);
 
 
@@ -88,9 +89,11 @@ int nearestPoint(Game* g);
 int main(){
     Game G;
     initGame(&G);
-    pthread_create(&G.dsh.thread,NULL,MoveDash,(void*)&G);
+    pthread_create(&G.dash.thread,NULL,moveDash,(void*)&G);
+    // pthread_create(&G.ball.thread,NULL,moveBall,(void*)&G);
 
-    pthread_join(G.dsh.thread,NULL);
+    // pthread_join(G.ball.thread,NULL);
+    pthread_join(G.dash.thread,NULL);
     delwin(G.win);
     return 0;
 }
@@ -125,8 +128,8 @@ int initGame(Game* g){
 	g->wdt = getmaxx(g->win);
 	g->hyt = getmaxy(g->win);
 	initWindow(g);
+	initBall(g);
 	initDash(g);
-	// initBall(g);
 	curs_set(0);
 	wrefresh(g->win);
 	return 0;
@@ -161,25 +164,25 @@ int initWindow(Game *g){
 }
 
 int initDash(Game* g){
-	g->dsh.Size = 10;
-	g->dsh.Loc.x = g->wdt/2;
-	g->dsh.Loc.y = g->hyt-2;
-	g->dsh.Speed = 0;
-    for(int i = g->dsh.Loc.x-g->dsh.Size; i < g->dsh.Loc.x+g->dsh.Size;i++){
+	g->dash.Size = 10;
+	g->dash.Loc.x = g->wdt/2;
+	g->dash.Loc.y = g->hyt-2;
+	g->dash.Speed = 0;
+    for(int i = g->dash.Loc.x-g->dash.Size; i < g->dash.Loc.x+g->dash.Size;i++){
 		sprintf(temp, "%c",DASH);
-		mvwprintw(g->win,g->dsh.Loc.y,i,temp);
+		mvwprintw(g->win,g->dash.Loc.y,i,temp);
     }
 	wrefresh(g->win);
 	return 0;
 }
 
-void* MoveDash(void* arg){
+void* moveDash(void* arg){
     Game* g = (Game*)arg;
 	while(ctrl != CLOSE){
         ctrl = keyIsPressed();
-        int x = g->dsh.Loc.x;
-        int y = g->dsh.Loc.y;
-        int s = g->dsh.Size;
+        int x = g->dash.Loc.x;
+        int y = g->dash.Loc.y;
+        int s = g->dash.Size;
 		if(ctrl == CONT){
 			continue;
 		}else if(ctrl == MV_LFT && x - s > 1){
@@ -187,37 +190,38 @@ void* MoveDash(void* arg){
 			mvwprintw(g->win,y,x+s,temp);
 			sprintf(temp, "%c",DASH);
 			mvwprintw(g->win,y,x-s-1,temp);
-			g->dsh.Loc.x -=1;
+			g->dash.Loc.x -=1;
 			ctrl = CONT;
 		}else if(ctrl == MV_RYT && x + s < g->wdt-2){
 			sprintf(temp, "%c",SPC);
 			mvwprintw(g->win, y,x-s, temp);
 			sprintf(temp, "%c",DASH);
 			mvwprintw(g->win,y,x+s+1,temp);
-			g->dsh.Loc.x += 1;
+			g->dash.Loc.x += 1;
 		}else if(ctrl == MV_UPP || ctrl == MV_DWN){
 			changedashSpeed(g,ctrl);
 		}else if(ctrl == CLOSE){
             break;
         }
 		ctrl = CONT;
-		Sleep(dashSPEEDS[g->dsh.Speed]);
+		Sleep(dashSPEEDS[g->dash.Speed]);
 		wrefresh(g->win);
 	}
+	finsh = CLOSE;
 	return NULL;
 }
 
 int changedashSpeed(Game* G,int ctrl){
 	if(ctrl == MV_UPP){
-		G->dsh.Speed += 1;
-		if(G->dsh.Speed >= nofSdp){
-			G->dsh.Speed = nofSdp-1;
+		G->dash.Speed += 1;
+		if(G->dash.Speed >= nofSdp){
+			G->dash.Speed = nofSdp-1;
 		}
 	}
 	if(ctrl == MV_DWN){
-		G->dsh.Speed -= 1;
-		if(G->dsh.Speed <= 0){
-			G->dsh.Speed = 0;
+		G->dash.Speed -= 1;
+		if(G->dash.Speed <= 0){
+			G->dash.Speed = 0;
 		}
 
 	}
@@ -229,17 +233,17 @@ void* moveBall(void* arg){
     Game* g = (Game*)arg;
     while(finsh != CLOSE){
         Point next;
-        next.x = g->Bal.Loc.x + moveInX(g);
-        next.y = g->Bal.Loc.y + moveInY(g);
+        next.x = g->ball.Loc.x + moveInX(g);
+        next.y = g->ball.Loc.y + moveInY(g);
         mvwprintw(g->win,1,4,"Angle(%3d)|cur=>(%3d <-> %3d)|base=>(%3d <-> %3d)|move=>(%3d || %3d)",
-                    g->ball->direction,g->ball.x,g->ball.y,g->Bal.BaseLoc.x,g->Bal.BaseLoc.y,moveInX(g),moveInY(g));
-	    if(nextX < g->wdt-1 && nextX > 0 && nextY < g->HYT-2 && nextY > 0){
+                    g->ball.direction,g->ball.Loc.x,g->ball.Loc.y,g->ball.BaseLoc.x,g->ball.BaseLoc.y,moveInX(g),moveInY(g));
+	    if(next.x < g->wdt-1 && next.x > 0 && next.y < g->hyt-2 && next.y > 0){
             sprintf(temp,"%c",SPC);
-            mvwprintw(g->win,g->ball.y,g->ball.x,temp);
-            g->ball.x = nextX;
-            g->ball.y = nextY;
+            mvwprintw(g->win,g->ball.Loc.y,g->ball.Loc.x,temp);
+            g->ball.Loc.x = next.x;
+            g->ball.Loc.y = next.y;
             sprintf(temp,"%c",BALL);
-            mvwprintw(g->win,g->ball.y,g->ball.x,temp);
+            mvwprintw(g->win,g->ball.Loc.y,g->ball.Loc.x,temp);
             wrefresh(g->win);
             continue;
         }
@@ -253,29 +257,47 @@ void* moveBall(void* arg){
 
 
 int moveInX(Game* g){
-	if(g->Bal.direction >= 0 && g->Bal.direction <= 80){
+	if(g->ball.direction >= 0 && g->ball.direction <= 80){
 		return 2;
-	}else if(g->Bal.direction > 80 && g->Bal.direction <= 100){
+	}else if(g->ball.direction > 80 && g->ball.direction <= 100){
 		return 0;
-	}else if(g->Bal.direction > 100 && g->Bal.direction <= 260){
+	}else if(g->ball.direction > 100 && g->ball.direction <= 260){
 		return -2;
-	}else if(g->Bal.direction > 260 && g->Bal.direction <= 280){
+	}else if(g->ball.direction > 260 && g->ball.direction <= 280){
 		return 0;
-	}else if(g->Bal.direction > 280 && g->Bal.direction <=360){
+	}else if(g->ball.direction > 280 && g->ball.direction <=360){
 		return 2;
 	}
 }
 
 int moveInY(Game* g){
-	if(g->Bal.direction >= 0 && g->Bal.direction <= 80){
-		return -(int)(2*angle(g->Bal.direction));
-	}else if(g->Bal.direction > 80 && g->Bal.direction <= 100){
+	if(g->ball.direction >= 0 && g->ball.direction <= 80){
+		return -(int)(2*angle(g->ball.direction));
+	}else if(g->ball.direction > 80 && g->ball.direction <= 100){
 		return -2;
-	}else if(g->Bal.direction > 100 && g->Bal.direction <= 260){
-		return -(int)(2*angle(g->Bal.direction));
-	}else if(g->Bal.direction > 260 && g->Bal.direction <= 280){
+	}else if(g->ball.direction > 100 && g->ball.direction <= 260){
+		return -(int)(2*angle(g->ball.direction));
+	}else if(g->ball.direction > 260 && g->ball.direction <= 280){
 		return 0;
-	}else if(g->Bal.direction > 280 && g->Bal.direction <=360){
-		return -(int)(2*angle(g->direction));
+	}else if(g->ball.direction > 280 && g->ball.direction <=360){
+		return -(int)(2*angle(g->ball.direction));
 	}
 }
+
+double angle(int degree){
+    return degree*M_PI/180;
+}
+
+int initBall(Game* g){
+	g->ball.direction = 90;
+	g->ball.Speed = 3;
+	g->ball.BaseLoc.x = g->wdt/2; 
+	g->ball.BaseLoc.y = g->hyt-3; 
+	g->ball.Loc.x = g->ball.BaseLoc.x; 
+	g->ball.Loc.y = g->ball.BaseLoc.y;
+	sprintf(temp,"%c",BALL);
+	mvwprintw(g->win,g->ball.Loc.y,g->ball.Loc.x,temp);
+	wrefresh(g->win);
+	return 0;
+}
+

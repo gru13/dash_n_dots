@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "windows.h": "c",
+        "pthread.h": "c",
+        "curses.h": "c"
+    }
+}

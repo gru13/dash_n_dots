@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\Dash_n_Dots.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\Dash_n_Dots.dir/objects.a @CMakeFiles\Dash_n_Dots.dir\objects1.rsp
+C:\MinGW\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\Dash_n_Dots.dir/objects.a -Wl,--no-whole-archive -o Dash_n_Dots.exe -Wl,--out-implib,libDash_n_Dots.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Dash_n_Dots.dir\linkLibs.rsp
